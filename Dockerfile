@@ -1,4 +1,4 @@
-FROM microsoft/aspnetcore-build as build-image
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as build-image
 
 WORKDIR /home/app
 
@@ -10,18 +10,16 @@ RUN dotnet restore
 
 COPY . .
 
-RUN dotnet test --verbosity=normal --results-directory /TestResults/ --logger "trx;LogFileName=test_results.xml" ./Tests/Tests.csproj
+RUN dotnet test ./Tests/Tests.csproj
 
 RUN dotnet publish ./AccountOwnerServer/AccountOwnerServer.csproj -o /publish/
 
-FROM microsoft/aspnetcore
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
 
 WORKDIR /publish
 
 COPY --from=build-image /publish .
 
-COPY --from=build-image /TestResults /TestResults
-
-ENV TEAMCITY_PROJECT_NAME = ${TEAMCITY_PROJECT_NAME}
+ENV ASPNETCORE_URLS="http://0.0.0.0:5000"
 
 ENTRYPOINT ["dotnet", "AccountOwnerServer.dll"]
